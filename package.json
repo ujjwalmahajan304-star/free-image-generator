@@ -1,0 +1,13 @@
+{
+  "name": "free-image-generator-v2",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "latest",
+    "multer": "latest",
+    "@huggingface/inference": "latest"
+  }
+}
