@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Image Generator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:#08080a;color:#f4f4f5}
+header{padding:18px 6%;display:flex;justify-content:space-between;border-bottom:1px solid #27272a}
+.logo{font-weight:800;font-size:21px}
+.pill{border:1px solid #3f3f46;border-radius:999px;padding:7px 11px;font-size:12px;color:#a1a1aa}
+main{max-width:1100px;margin:auto;padding:48px 18px}
+.hero{text-align:center}
+.hero h1{font-size:clamp(40px,7vw,72px);margin:0}
+.hero span{color:#a78bfa}
+.hero p{color:#a1a1aa;font-size:18px}
+.card{max-width:850px;margin:35px auto;background:#18181b;border:1px solid #29292d;border-radius:22px;padding:22px}
+.tabs{display:flex;gap:10px;margin-bottom:18px}
+.tab{flex:1;padding:13px;border:1px solid #3f3f46;background:#111113;color:#a1a1aa;border-radius:12px}
+.tab.active{background:#2a213d;color:#fff;border-color:#7c3aed}
+textarea{width:100%;height:130px;background:#0b0b0d;border:1px solid #3f3f46;border-radius:14px;padding:15px;color:white;font-size:16px;resize:vertical}
+.upload{display:none;margin-top:14px;padding:28px;text-align:center;border:2px dashed #3f3f46;border-radius:15px;color:#a1a1aa}
+.upload.show{display:block}
+.row{display:flex;gap:10px;margin-top:14px}
+.generate{width:100%;padding:15px;border:0;border-radius:13px;background:#7c3aed;color:#fff;font-weight:800;font-size:16px}
+.generate:disabled{opacity:.55}
+.result{display:none;margin-top:20px;text-align:center}
+.result img{max-width:100%;border-radius:16px;border:1px solid #3f3f46}
+.download{display:inline-block;margin-top:12px;padding:11px 15px;border-radius:10px;background:#27272a;color:white;text-decoration:none}
+.status{margin-top:12px;color:#a1a1aa;font-size:14px}
+.error{color:#fca5a5}
+footer{text-align:center;color:#71717a;padding:25px}
+</style>
+</head>
+
+<body>
+<header>
+<div class="logo">🎨 Free Image Generator</div>
+<div class="pill">AI Studio</div>
+</header>
+
+<main>
+<section class="hero">
+<h1>Turn ideas into <span>images.</span></h1>
+<p>Generate or transform images with AI.</p>
+</section>
+
+<section class="card">
+<div class="tabs">
+<button class="tab active" id="tt">✨ Text to Image</button>
+<button class="tab" id="it">🖼️ Image to Image</button>
+</div>
+
+<textarea id="prompt" placeholder="A cinematic sunset over the Himalayas, ultra detailed..."></textarea>
+
+<label class="upload" id="upload" for="file">
+📤 Choose an image<br>
+<small>PNG, JPG or WEBP</small>
+</label>
+
+<input id="file" type="file" accept="image/*" hidden>
+
+<div class="row">
+<button class="generate" id="go">Generate Image ✨</button>
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="result" id="result">
+<img id="out">
+<br>
+<a class="download" id="download" download="generated-image.png">⬇️ Download Image</a>
+</div>
+</section>
+</main>
+
+<footer>Free Image Generator • v2</footer>
+
+<script>
+let mode="text";
+
+const tt=document.getElementById("tt"),
+it=document.getElementById("it"),
+up=document.getElementById("upload"),
+go=document.getElementById("go"),
+status=document.getElementById("status"),
+res=document.getElementById("result"),
+out=document.getElementById("out"),
+dl=document.getElementById("download");
+
+tt.onclick=()=>{
+mode="text";
+tt.classList.add("active");
+it.classList.remove("active");
+up.classList.remove("show")
+};
+
+it.onclick=()=>{
+mode="image";
+it.classList.add("active");
+tt.classList.remove("active");
+up.classList.add("show")
+};
+
+go.onclick=async()=>{
+const p=document.getElementById("prompt").value.trim(),
+f=document.getElementById("file").files[0];
+
+if(!p){
+status.textContent="Please enter a prompt.";
+return
+}
+
+if(mode==="image"&&!f){
+status.textContent="Please upload an image.";
+return
+}
+
+go.disabled=true;
+status.textContent="Generating…";
+res.style.display="none";
+
+try{
+const fd=new FormData();
+fd.append("prompt",p);
+if(f)fd.append("image",f);
+
+const r=await fetch("/api/generate",{
+method:"POST",
+body:fd
+});
+
+if(!r.ok)throw new Error(await r.text());
+
+const blob=await r.blob();
+const url=URL.createObjectURL(blob);
+
+out.src=url;
+dl.href=url;
+res.style.display="block";
+status.textContent="Done!";
+
+}catch(e){
+status.className="status error";
+status.textContent="Generation failed: "+e.message
+}
+
+finally{
+go.disabled=false
+}
+};
+</script>
+
+</body>
+  </html>
